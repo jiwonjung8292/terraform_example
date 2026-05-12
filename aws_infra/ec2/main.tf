@@ -32,7 +32,7 @@ resource "aws_instance" "aws04_instance" {
 # 2. Code Deploy Agent, Docker 설치 대기
 resource "null_resource" "aws04_delay" {
   provisioner "local-exec" {
-    command = "sleep 300"
+    command = "sleep 180"
   }
   depends_on = [aws_instance.aws04_instance]
 }
