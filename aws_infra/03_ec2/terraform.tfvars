@@ -1,4 +1,5 @@
 # aws_infra/ec2/terraform.tfvars
+remote_state_bucket = "aws04-terraform-state-bucket"
 region                     = "ap-northeast-2"
 prefix                     = "aws04"
 key_name                   = "aws04-key"

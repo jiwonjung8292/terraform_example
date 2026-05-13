@@ -1,3 +1,4 @@
+# jenkins/main.tf
 resource "aws_instance" "aws04_jenkins_server" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
@@ -10,18 +11,22 @@ resource "aws_instance" "aws04_jenkins_server" {
   }
 
   # network 모듈에서 생성한 NAT 게이트웨이와 연결된 Private Subnet 1번 사용
-  subnet_id              = data.aws_subnets.aws04_private_subnets.ids[0]
+  #subnet_id              = data.aws_subnets.aws04_private_subnets.ids[0]
+  subnet_id              = data.terraform_remote_state.network.outputs.private_subnet_ids[0]
   
   # 프라이빗 망이므로 퍼블릭 IP는 할당하지 않음
   associate_public_ip_address = false
 
   vpc_security_group_ids = [
-    data.aws_security_group.aws04_ssh_sg.id, 
-    data.aws_security_group.aws04_http_sg.id
+    # data.aws_security_group.aws04_ssh_sg.id, 
+    # data.aws_security_group.aws04_http_sg.id
+    data.terraform_remote_state.network.outputs.ssh_sg_id,
+    data.terraform_remote_state.network.outputs.http_sg_id
   ]
   
   # data.tf (33번 라인 부근)에 정의된 인스턴스 프로파일 참조
-  iam_instance_profile = data.aws_iam_instance_profile.aws04_ec2_profile.name
+  #iam_instance_profile = data.aws_iam_instance_profile.aws04_ec2_profile.name
+  iam_instance_profile = data.terraform_remote_state.iam.outputs.ec2_instance_profile_name
 
   user_data = <<-EOF
               #!/bin/bash
@@ -67,7 +72,9 @@ resource "aws_instance" "aws04_jenkins_server" {
 
 # ALB 대상 그룹에 프라이빗 젠킨스 인스턴스 연결
 resource "aws_lb_target_group_attachment" "aws04_jenkins_attach" {
-  target_group_arn = data.aws_lb_target_group.aws04_jenkins_tg.arn
+  #target_group_arn = data.aws_lb_target_group.aws04_jenkins_tg.arn
+  #target_group_arn = data.terraform_remote_state.alb.outputs.jenkins_target_group_arn
+  target_group_arn = data.terraform_remote_state.alb.outputs.jenkins_tg_arn
   target_id        = aws_instance.aws04_jenkins_server.id
   port             = 80
 }
